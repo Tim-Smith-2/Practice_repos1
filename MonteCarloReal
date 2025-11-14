@@ -1,0 +1,211 @@
+#Short Title ---- Data Visualization and Table for Amount of Flight Passengers
+##Scrape and Wrangle Date from 2019-2024 for Airport Passengers
+##Create a data table describing the data
+##Create a data visualization to visualize what to data is trying to show
+
+#Step 1: Load Packages ----
+library(tidyverse)
+library(rvest)
+library(readr)
+#install.packages("janitor")
+library(janitor)
+#install.packages("knitr")
+library(knitr)
+#install.packages("kableExtra")
+library(kableExtra)
+
+#Step 2: Scrape data from Wikepidia for 2019 to 2024 ----
+Flight_Raw <- read_html("https://en.wikipedia.org/wiki/List_of_busiest_airports_by_passenger_traffic") %>%
+  html_elements(css = "table" ) %>%
+  html_table()
+
+Flight_2019_Raw <- read_html("https://en.wikipedia.org/wiki/List_of_busiest_airports_by_passenger_traffic_(2010%E2%80%932019)") %>%
+  html_elements(css = "table" ) %>%
+  html_table()
+Flights_Raw_Data_2019 <- Flight_2019_Raw[[1]]
+
+#Step 3: Get the Necessary Data tables from the scrape ----
+Flights_Raw_Data_2024 <- Flight_Raw[[1]]
+Flights_Raw_Data_2023 <- Flight_Raw[[2]]
+Flights_Raw_Data_2022 <- Flight_Raw[[3]]
+Flights_Raw_Data_2021 <- Flight_Raw[[4]]
+Flights_Raw_Data_2020 <- Flight_Raw[[5]]
+
+#Step 4: Wrangle the data by selecting and filtering the correct rows and converting ----
+## the data to numeric for the number of passengers and remove unnecessary characters
+Flights_Clean_Data_2024 <- Flights_Raw_Data_2024 %>%
+  select(Airport, Totalpassengers)%>%
+  filter( Airport %in% c(
+    "Tokyo Haneda Airport",
+    "Los Angeles International Airport",
+    "Dubai International Airport",
+    "Hartsfield–Jackson Atlanta International Airport",
+    "Frankfurt Airport",
+    "Beijing Daxing International Airport")
+  )%>%
+  mutate(
+    Totalpassengers = gsub("\\[\\d+\\]", "", Totalpassengers),
+    Totalpassengers = gsub(",", "", Totalpassengers),
+    Total_passengers = as.numeric(Totalpassengers),
+  )%>%
+  select(Airport, Total_passengers)%>% #Step 5: Add the column for the year ----
+  mutate(Year = 2024)
+    
+Flights_Clean_Data_2023 <- Flights_Raw_Data_2023 %>%
+  select(Airport, Totalpassengers)%>%
+  filter( Airport %in% c(
+    "Tokyo Haneda Airport",
+    "Los Angeles International Airport",
+    "Dubai International Airport",
+    "Hartsfield–Jackson Atlanta International Airport",
+    "Frankfurt Airport",
+    "Beijing Daxing International Airport")
+  )%>%
+  mutate(
+    Totalpassengers = gsub(",", "", Totalpassengers),
+    Total_passengers = as.numeric(Totalpassengers),
+  )%>%
+  select(Airport, Total_passengers)%>%
+  mutate(Year = 2023)
+
+Flights_Clean_Data_2022 <- Flights_Raw_Data_2022 %>%
+  select(Airport, Totalpassengers)%>%
+  filter( Airport %in% c(
+    "Tokyo Haneda Airport",
+    "Los Angeles International Airport",
+    "Dubai International Airport",
+    "Hartsfield–Jackson Atlanta International Airport",
+    "Frankfurt Airport",
+    "Beijing Daxing International Airport")
+  )%>%
+  mutate(
+    Totalpassengers = gsub(",", "", Totalpassengers),
+    Total_passengers = as.numeric(Totalpassengers),
+  )%>%
+  select(Airport, Total_passengers)%>%
+  mutate(Year = 2022)
+
+Flights_Clean_Data_2021 <- Flights_Raw_Data_2021 %>%
+  select(Airport, Totalpassengers)%>%
+  filter( Airport %in% c(
+    "Tokyo Haneda Airport",
+    "Los Angeles International Airport",
+    "Dubai International Airport",
+    "Hartsfield–Jackson Atlanta International Airport",
+    "Frankfurt Airport",
+    "Beijing Daxing International Airport")
+  )%>%
+  mutate(
+    Totalpassengers = gsub(",", "", Totalpassengers),
+    Total_passengers = as.numeric(Totalpassengers),
+  )%>%
+  select(Airport, Total_passengers)%>%
+  mutate(Year = 2021)
+    
+Flights_Clean_Data_2020 <- Flights_Raw_Data_2020 %>%
+  select(Airport, Totalpassengers)%>%
+  filter( Airport %in% c(
+    "Tokyo Haneda Airport",
+    "Los Angeles International Airport",
+    "Dubai International Airport",
+    "Hartsfield–Jackson Atlanta International Airport",
+    "Frankfurt Airport",
+    "Beijing Daxing International Airport")
+  )%>%
+  mutate(
+    Totalpassengers = gsub(",", "", Totalpassengers),
+    Total_passengers = as.numeric(Totalpassengers),
+  )%>%
+  select(Airport, Total_passengers)%>%
+  mutate(Year = 2020)
+
+Flights_Clean_Data_2019 <- Flights_Raw_Data_2019 %>%
+  select(Airport, Totalpassengers)%>%
+  filter( Airport %in% c(
+    "Tokyo Haneda Airport",
+    "Los Angeles International Airport",
+    "Dubai International Airport",
+    "Hartsfield–Jackson Atlanta International Airport",
+    "Frankfurt Airport",
+    "Beijing Daxing International Airport")
+  )%>%
+  mutate(
+    Totalpassengers = gsub(",", "", Totalpassengers),
+    Total_passengers = as.numeric(Totalpassengers),
+  )%>%
+  select(Airport, Total_passengers)%>%
+  mutate(Year = 2019)
+
+#Step 6: Combine all the rows of the data frames to stack them on top of each other ----
+
+Flights_Clean_Data <- bind_rows(
+  Flights_Clean_Data_2019,
+  Flights_Clean_Data_2020,
+  Flights_Clean_Data_2021,
+  Flights_Clean_Data_2022,
+  Flights_Clean_Data_2023,
+  Flights_Clean_Data_2024
+)
+
+#Step 7: Pivot the data for the data table so that the columns is the year and ----
+## the row is the Airport
+Flights_Clean_Data_pivoted <- Flights_Clean_Data %>% 
+  pivot_wider(
+    id_cols = Airport,
+    names_from = Year,
+    values_from = Total_passengers,
+  )
+
+#Step 8: Get the correct names for the column titles ----
+names(Flights_Clean_Data) <- c(
+  "Airport",
+  "Total Passengers",
+  "Year"
+)
+
+#Step 9: Make the table that is striped with a title and striped and has commas ----
+Flights_Clean_Data_pivoted %>%
+  kable(
+    caption = "Total Passengers per Airport per Year",
+    booktabs = TRUE,
+    align = c("l", rep("c",6)),
+    format.args = list(big.mark = ",")
+  )%>%
+  kableExtra::kable_classic(
+    font_size = 16,
+    lightable_options = "striped"
+  )
+
+#Step 10: Mutate the data so its described in millions and make line plot for the data ----
+## the x is the Year, the y is the Total Passengers and the color is Airport I made sure the color
+## is colorblind friendly
+Flights_Clean_Data %>%
+mutate(
+  `Total Passengers`= `Total Passengers` / 1000000
+)%>%
+ggplot(
+  mapping = aes(
+    x = Year,
+    y = `Total Passengers`,
+    color = Airport,
+    shape = Airport
+  )
+) +
+  geom_line(linewidth = 2) +
+  labs(
+    x = "Year",
+    y = "Passengers in Millions",
+    color = "Airport",
+    shape = "Airport",
+    title = "Total Passengers per Airport per Year"
+  ) +
+  scale_color_manual(
+    values = c("#332288", "#117733", "#44AA99","#88CCEE", "#DDCC77", "#AA4499","#FFA500", )
+  )+
+  theme_bw() +
+  theme(
+    legend.position = "bottom"
+  )
+  
+
+
